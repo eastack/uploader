@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>File API Operation</title>
+    <style>
+        .visually-hidden {
+            position: absolute !important;
+            height: 1px;
+            width: 1px;
+            overflow: hidden;
+            clip: rect(1px, 1px, 1px, 1px);
+        }
+
+        /* Separate rule for compatibility, :focus-within is required on modern Firefox and Chrome */
+        input.visually-hidden:focus + label {
+            outline: thin dotted;
+        }
+
+        input.visually-hidden:focus-within + label {
+            outline: thin dotted;
+        }
+    </style>
+</head>
+<body>
+<div onload="">
+    <input type="file" multiple id="input" accept="image/*" class="visually-hidden"/>
+    <label for="input">我是上传Label</label>
+</div>
+<script charset="utf-8">
+    const inputElement = document.getElementById("input");
+    inputElement.addEventListener("change", handleFiles, false);
+
+    async function handleFiles() {
+        for (let i = 0; i < this.files.length; i++) {
+            for (let j = 0;
+                 j < this.files[i].size && j + 1000 <= this.files[i].size;
+                 j += 1000) {
+                const blob = this.files[i].slice(j, j + 1000);
+                const arrayBufferPromise = await blob.arrayBuffer();
+                const hashBuffer = await crypto.subtle.digest('SHA-512', arrayBufferPromise);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+                console.log(hashHex)
+            }
+        }
+    }
+</script>
+</body>
+</html>
