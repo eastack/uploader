@@ -26,24 +26,43 @@
 <body>
 <div onload="">
     <input type="file" multiple id="input" accept="image/*" class="visually-hidden"/>
-    <label for="input">我是上传Label</label>
+    <label for="input">Upload Click Me</label>
+    <div id="preview"></div>
 </div>
 <script charset="utf-8">
+    // chunk size
+    const chunkSize = 1024000;
+
+    // 创建 hash worker
+    const hashWorker = new Worker("hash-worker.js");
+    hashWorker.onmessage = function (e) {
+        console.log(e.data)
+    }
+
     const inputElement = document.getElementById("input");
     inputElement.addEventListener("change", handleFiles, false);
 
     async function handleFiles() {
         for (let i = 0; i < this.files.length; i++) {
-            for (let j = 0;
-                 j < this.files[i].size && j + 1000 <= this.files[i].size;
-                 j += 1000) {
-                const blob = this.files[i].slice(j, j + 1000);
-                const arrayBufferPromise = await blob.arrayBuffer();
-                const hashBuffer = await crypto.subtle.digest('SHA-512', arrayBufferPromise);
-                const hashArray = Array.from(new Uint8Array(hashBuffer));
-                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            // display preview image
+            if (!this.files[i].type.startsWith('image/')) continue;
+            const img = document.createElement("img");
+            img.classList.add("obj");
+            img.file = this.files[i];
+            const fileReader = new FileReader();
+            fileReader.onload = (function (aImg) {
+                return function (e) {
+                    aImg.src = e.target.result;
+                };
+            })(img);
+            fileReader.readAsDataURL(this.files[i]);
+            const preview = document.getElementById("preview");
+            preview.appendChild(img);
 
-                console.log(hashHex)
+            // slice file
+            for (let j = 0; j < this.files[i].size; j += chunkSize) {
+                const blob = this.files[i].slice(j, j + chunkSize);
+                hashWorker.postMessage(blob);
             }
         }
     }
