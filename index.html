@@ -25,13 +25,13 @@
 </head>
 <body>
 <div onload="">
-    <input type="file" multiple id="input" accept="image/*" class="visually-hidden"/>
+    <input type="file" multiple id="input" accept="*/*" class="visually-hidden"/>
     <label for="input">Upload Click Me</label>
     <div id="preview"></div>
 </div>
 <script charset="utf-8">
     // chunk size
-    const chunkSize = 1024000;
+    const chunkSize = 102400000;
 
     // 创建 hash worker
     const hashWorker = new Worker("hash-worker.js");
@@ -44,25 +44,32 @@
 
     async function handleFiles() {
         for (let i = 0; i < this.files.length; i++) {
+
             // display preview image
-            if (!this.files[i].type.startsWith('image/')) continue;
-            const img = document.createElement("img");
-            img.classList.add("obj");
-            img.file = this.files[i];
-            const fileReader = new FileReader();
-            fileReader.onload = (function (aImg) {
-                return function (e) {
-                    aImg.src = e.target.result;
-                };
-            })(img);
-            fileReader.readAsDataURL(this.files[i]);
-            const preview = document.getElementById("preview");
-            preview.appendChild(img);
+            // if (!this.files[i].type.startsWith('image/')) continue;
+            // const img = document.createElement("img");
+            // img.classList.add("obj");
+            // img.file = this.files[i];
+            // const fileReader = new FileReader();
+            // fileReader.onload = (function (aImg) {
+            //     return function (e) {
+            //         aImg.src = e.target.result;
+            //     };
+            // })(img);
+            // fileReader.readAsDataURL(this.files[i]);
+            // const preview = document.getElementById("preview");
+            // preview.appendChild(img);
 
             // slice file
             for (let j = 0; j < this.files[i].size; j += chunkSize) {
+                console.log(this.files[i].length)
+                const fileReader = new FileReader();
                 const blob = this.files[i].slice(j, j + chunkSize);
-                hashWorker.postMessage(blob);
+                fileReader.readAsArrayBuffer(blob)
+                fileReader.onload = function () {
+                    console.log(fileReader.result.length);
+                    // hashWorker.postMessage(fileReader.result);
+                }
             }
         }
     }
