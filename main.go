@@ -7,12 +7,6 @@ import (
 	"net/http"
 )
 
-//go:embed index.html
-var index string
-
-//go:embed hash-worker.js
-var hashWorker string
-
 func main() {
 	setupRoutes()
 }
@@ -63,17 +57,7 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, index)
-}
-
-func workerJSHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, hashWorker)
-}
-
 func setupRoutes() {
 	http.HandleFunc("/upload", uploadFile)
-	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/hash-worker.js", workerJSHandler)
 	http.ListenAndServe(":8080", nil)
 }

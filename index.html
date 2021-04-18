@@ -1,77 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
-    <title>File API Operation</title>
-    <style>
-        .visually-hidden {
-            position: absolute !important;
-            height: 1px;
-            width: 1px;
-            overflow: hidden;
-            clip: rect(1px, 1px, 1px, 1px);
-        }
-
-        /* Separate rule for compatibility, :focus-within is required on modern Firefox and Chrome */
-        input.visually-hidden:focus + label {
-            outline: thin dotted;
-        }
-
-        input.visually-hidden:focus-within + label {
-            outline: thin dotted;
-        }
-    </style>
+    <title>Uploader</title>
 </head>
 <body>
-<div onload="">
-    <input type="file" multiple id="input" accept="*/*" class="visually-hidden"/>
-    <label for="input">Upload Click Me</label>
-    <div id="preview"></div>
+<div>
+    <input type="file" multiple id="file" accept="*/*"/>
 </div>
 <script charset="utf-8">
-    // chunk size
-    const chunkSize = 102400000;
-
-    // 创建 hash worker
-    const hashWorker = new Worker("hash-worker.js");
+    // create uploader web worker
+    const hashWorker = new Worker("uploader.js");
     hashWorker.onmessage = function (e) {
         console.log(e.data)
     }
 
-    const inputElement = document.getElementById("input");
+
+    const inputElement = document.getElementById("file");
     inputElement.addEventListener("change", handleFiles, false);
 
-    async function handleFiles() {
-        for (let i = 0; i < this.files.length; i++) {
-
-            // display preview image
-            // if (!this.files[i].type.startsWith('image/')) continue;
-            // const img = document.createElement("img");
-            // img.classList.add("obj");
-            // img.file = this.files[i];
-            // const fileReader = new FileReader();
-            // fileReader.onload = (function (aImg) {
-            //     return function (e) {
-            //         aImg.src = e.target.result;
-            //     };
-            // })(img);
-            // fileReader.readAsDataURL(this.files[i]);
-            // const preview = document.getElementById("preview");
-            // preview.appendChild(img);
-
-            // slice file
-            for (let j = 0; j < this.files[i].size; j += chunkSize) {
-                console.log(this.files[i].length)
-                const fileReader = new FileReader();
-                const blob = this.files[i].slice(j, j + chunkSize);
-                fileReader.readAsArrayBuffer(blob)
-                fileReader.onload = function () {
-                    console.log(fileReader.result.length);
-                    // hashWorker.postMessage(fileReader.result);
-                }
-            }
+    function handleFiles(event) {
+        for (let file of event.target.files) {
+            processFile(file)
         }
+    }
+
+    function processFile(file) {
+        let start = 0;
+        const step = 1024 * 1000 * 500;
+        const limit = file.size;
+        let fileReader = new FileReader();
+
+        fileReader.onloadstart = () => {
+        }
+
+        fileReader.onload = () => {
+            hashWorker.postMessage(fileReader.result, [fileReader.result]);
+        }
+
+        fileReader.onloadend = () => {
+            upload(file, start, start += step)
+        }
+
+        const upload = (file, start, end) => {
+            if (start > limit) return;
+            if (end > limit) end = limit;
+            let blob = file.slice(start, end);
+            fileReader.readAsArrayBuffer(blob)
+        }
+
+        upload(file, start, start += step)
+        console.log("我执行完了")
     }
 </script>
 </body>
