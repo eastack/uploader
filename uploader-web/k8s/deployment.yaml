@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: uploader-web
+  labels:
+    app: uploader-web
+spec:
+  clusterIP: None
+  ports:
+    - port: 80
+      name: uploader-web
+  selector:
+    app: uploader-web
+---
+apiVersion: apps/v1
+kond: Deployment
+metadata:
+  name: uploader-web
+  labels:
+    app: uploader-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: uploader-web
+  template:
+    metadata:
+      labels:
+        app: uploader-web
+    spec:
+      containers:
+      - name: uploader-web
+        image: eastack/uploader-web
+        ports:
+        - containerPort: 80
+          name: http

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Uploader</title>
+</head>
+<body>
+<div>
+    <input type="file" multiple id="file" accept="*/*"/>
+</div>
+<script charset="utf-8">
+    // create uploader web worker
+    const hashWorker = new Worker("uploader.js");
+    hashWorker.onmessage = function (e) {
+        console.log(e.data)
+    }
+
+
+    const inputElement = document.getElementById("file");
+    inputElement.addEventListener("change", handleFiles, false);
+
+    function handleFiles(event) {
+        for (let file of event.target.files) {
+            processFile(file)
+        }
+    }
+
+    function processFile(file) {
+        let start = 0;
+        const step = 1024 * 1000 * 500;
+        const limit = file.size;
+        let fileReader = new FileReader();
+
+        fileReader.onloadstart = () => {
+        }
+
+        fileReader.onload = () => {
+            hashWorker.postMessage(fileReader.result, [fileReader.result]);
+        }
+
+        fileReader.onloadend = () => {
+            upload(file, start, start += step)
+        }
+
+        const upload = (file, start, end) => {
+            if (start > limit) return;
+            if (end > limit) end = limit;
+            let blob = file.slice(start, end);
+            fileReader.readAsArrayBuffer(blob)
+        }
+
+        upload(file, start, start += step)
+        console.log("我执行完了")
+    }
+</script>
+</body>
+</html>

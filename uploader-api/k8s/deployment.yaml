@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: uploader-api
+  labels:
+    app: uploader-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: uploader-api
+  template:
+    metadata:
+      labels:
+        app: uploader-api
+    spec:
+      containers:
+      - name: uploader-api
+        image: eastack/uploader-api
+        ports:
+        - containerPort: 8080
+          name: http

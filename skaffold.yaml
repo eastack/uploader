@@ -1,0 +1,5 @@
+apiVersion: skaffold/v2beta12
+kind: Config
+requires:
+- path: ./uploader-web
+- path: ./uploader-api

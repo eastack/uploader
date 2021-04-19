@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: uploader-api-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /web(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: uploader-api
+                port:
+                  number: 8080
